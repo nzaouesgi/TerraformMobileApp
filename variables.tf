@@ -33,3 +33,7 @@ variable "api_management_name" {
     default = "gaming4lifeapim"
 }
 
+variable "api_version" {
+    type = string
+    default = "1"
+}
