@@ -29,7 +29,7 @@ resource "azurerm_api_management_api" "api_management_api" {
   subscription_required = false
   
   # No sufix since we have only one API to expose.
-  path                = ""
+  path                  = ""
 
   # Only HTTPS between gateway and API.
   protocols           = [ "https" ]
