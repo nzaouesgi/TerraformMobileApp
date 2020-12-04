@@ -1,0 +1,3 @@
+api_version = "1"
+mysql_password ="user_password"
+mysql_user = "user_name"

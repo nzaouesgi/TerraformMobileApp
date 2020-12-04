@@ -89,6 +89,20 @@ resource azurerm_mysql_database database {
 
 }
 
+resource "azurerm_mysql_configuration" "mysql_capture_mode" {
+  name                = "query_store_capture_mode"
+  resource_group_name = azurerm_resource_group.rg.name
+  server_name         = azurerm_mysql_server.mysql.name
+  value               = "ALL"
+}
+
+resource "azurerm_mysql_configuration" "mysql_wait_sampling_capture_mode" {
+  name                = "query_store_wait_sampling_capture_mode"
+  resource_group_name = azurerm_resource_group.rg.name
+  server_name         = azurerm_mysql_server.mysql.name
+  value               = "ALL"
+}
+
 
 //APP service Plan
 resource "azurerm_app_service_plan" "api_service_plan" {
@@ -102,6 +116,7 @@ resource "azurerm_app_service_plan" "api_service_plan" {
     size = "B1"
   }
 }
+
 //App service
 resource "azurerm_app_service" "api" {
   
@@ -126,70 +141,80 @@ resource "azurerm_app_service" "api" {
 }
 
 //TRAFFIC Manager
-//resource "azurerm_traffic_manager_profile" "mobileApp" {
-//  name                = "azurermTrafficManagerProfileGaming4Life"
-//  resource_group_name = azurerm_resource_group.rg.name
-//
-//  traffic_routing_method = "Weighted"
-//
-//  dns_config {
-//    relative_name = "azurermTrafficManagerProfileDnsGaming4Life"
-//    ttl           = 100
-//  }
-//
-//  monitor_config {
-//    protocol                     = "https"
-//    port                         = 443
-//    path                         = "/"
-//    interval_in_seconds          = 30
-//    timeout_in_seconds           = 9
-//    tolerated_number_of_failures = 3
-//  }
-//
-//  tags = {
-//    environment = "Production"
-//  }
-//}
-//
-//resource "azurerm_traffic_manager_endpoint" "mobileApp" {
-//  name                = "azurerm_traffic_manager_endpoint-gamingForLife"
-//  resource_group_name = azurerm_resource_group.rg.name
-//  profile_name        = azurerm_traffic_manager_profile.mobileApp.name
-//  target              = azurerm_api_management.api_management.public_ip_addresses[0]
-//  type                = "externalEndpoints"
-//  weight              = 100
-//}
+resource "azurerm_traffic_manager_profile" "mobileApp" {
+  name                = "azurermTrafficManagerProfileGaming4Life"
+  resource_group_name = azurerm_resource_group.rg.name
+  traffic_routing_method = "Weighted"
+
+  dns_config {
+    relative_name = "azurermTrafficManagerProfileDnsGaming4Life"
+    ttl           = 100
+  }
+
+  monitor_config {
+    protocol                     = "https"
+    port                         = 443
+    path                         = "/"
+    interval_in_seconds          = 30
+    timeout_in_seconds           = 9
+    tolerated_number_of_failures = 3
+  }
+
+  tags = {
+    environment = "Production"
+  }
+}
+
+resource "azurerm_traffic_manager_endpoint" "mobileApp" {
+  name                = "azurerm_traffic_manager_endpoint-gamingForLife"
+  resource_group_name = azurerm_resource_group.rg.name
+  profile_name        = azurerm_traffic_manager_profile.mobileApp.name
+  target              = azurerm_api_management.api_management.public_ip_addresses[0]
+  type                = "externalEndpoints"
+  weight              = 100
+}
 
 
 resource "azurerm_storage_account" "storage_account" {
-  name                     = "storage_account-game4lfe"
+  name                     = "storageaccountgame4life"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
   account_kind = "BlobStorage"
+
+  allow_blob_public_access = true
+
   network_rules {
     default_action = "Allow"
   }
 }
-//
-//resource "azurerm_cdn_profile" "example" {
-//  name                = "cdn-profile-gaming4Life"
-//  location            = azurerm_resource_group.rg.location
-//  resource_group_name = azurerm_resource_group.rg.name
-//  sku                 = "Standard_Verizon"
-//}
-//
-//resource "azurerm_cdn_endpoint" "example" {
-//  name                = "cdn_endpoint-game4Life"
-//  profile_name        = azurerm_cdn_profile.example.name
-//  location            = azurerm_resource_group.rg.location
-//  resource_group_name = azurerm_resource_group.rg.name
-//
-//  origin {
-//    name      = ""
-//    host_name = "www.contoso.com"
-//  }
-//
-//}
+
+resource "azurerm_storage_container" "example" {
+  name                  = "storagecontainergamefourlife"
+  storage_account_name  = azurerm_storage_account.storage_account.name
+  container_access_type = "blob"
+}
+
+resource "azurerm_cdn_profile" "example" {
+  name                = "cdn-profile-gaming4Life"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "Standard_Microsoft"
+}
+
+resource "azurerm_cdn_endpoint" "example" {
+  name                = "cdnEndpointGame4Life"
+  profile_name        = azurerm_cdn_profile.example.name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  origin {
+    name      = "origin1"
+    host_name = azurerm_storage_account.storage_account.primary_blob_host
+  }
+  origin_host_header = azurerm_storage_account.storage_account.primary_blob_host
+
+}
+
 
